@@ -1,0 +1,118 @@
+
+from tkinter import *
+from tkinter import font
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import random
+
+# Initialize scores and result history
+player_score = 0
+computer_score = 0
+result_history = []
+
+# Function to get computer's choice
+def get_computer_choice():
+    choices = ['Rock', 'Paper', 'Scissors']
+    return random.choice(choices)
+
+# Function to determine the winner
+def determine_winner(player_choice, computer_choice):
+    if player_choice == computer_choice:
+        return "It's a tie!", "tie"
+    elif (player_choice == 'Rock' and computer_choice == 'Scissors') or \
+         (player_choice == 'Paper' and computer_choice == 'Rock') or \
+         (player_choice == 'Scissors' and computer_choice == 'Paper'):
+        return "You win!", "player"
+    else:
+        return "Computer wins!", "computer"
+
+# Function to update scores and result history
+def update_scores(result):
+    global player_score, computer_score
+    if result == "player":
+        player_score += 1
+    elif result == "computer":
+        computer_score += 1
+    result_history.append(result)
+    player_score_label.config(text=f"Your Score: {player_score}")
+    computer_score_label.config(text=f"Computer Score: {computer_score}")
+    update_graph()
+
+# Function to update the result graph (Pie chart)
+def update_graph():
+    player_wins = result_history.count('player')
+    computer_wins = result_history.count('computer')
+    tie_games = len(result_history) - player_wins - computer_wins
+    
+    # Clear previous graph
+    for widget in result_graph_frame.winfo_children():
+        widget.destroy()
+    
+    # Create a new pie chart with enhanced styling
+    fig = Figure(figsize=(6, 4), dpi=100)
+    ax = fig.add_subplot(111)
+    labels = ['Player Wins', 'Computer Wins', 'Ties']
+    sizes = [player_wins, computer_wins, tie_games]
+    colors = ['#FF6347', '#6495ED', '#90EE90']
+    explode = (0.1, 0, 0)  # Explode the first slice (Player Wins)
+    ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140, explode=explode)
+    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
+    
+    # Display the pie chart in the Tkinter window
+    canvas = FigureCanvasTkAgg(fig, master=result_graph_frame)
+    canvas.draw()
+    canvas.get_tk_widget().pack(padx=20, pady=20)  # Add padding
+
+# Function to play the game
+def play_game(player_choice):
+    computer_choice = get_computer_choice()
+    
+    # Display player's and computer's choices
+    player_choice_label.config(text=f"Your choice: {player_choice}")
+    computer_choice_label.config(text=f"Computer's choice: {computer_choice}")
+    
+    result_text, result = determine_winner(player_choice, computer_choice)
+    result_label.config(text=result_text)
+    update_scores(result)
+
+# Create the main window
+root = Tk()
+root.title("Rock Paper Scissors")
+
+# Set font style
+game_font = font.Font(family="Helvetica", size=14, weight="bold")
+
+# Create a colorful game background
+canvas = Canvas(root, width=800, height=600, bg="#F8F8FF")
+canvas.pack()
+
+# Create labels for displaying scores, choices, and result with padding
+label_style = {'font': game_font, 'bg': '#F8F8FF', 'fg': '#000000', 'padx': 10, 'pady': 5}
+player_score_label = Label(canvas, text=f"Your Score: {player_score}", **label_style)
+computer_score_label = Label(canvas, text=f"Computer Score: {computer_score}", **label_style)
+result_label = Label(canvas, text="Choose Rock, Paper, or Scissors to play!", **label_style)
+player_choice_label = Label(canvas, text="Your choice: ", **label_style)
+computer_choice_label = Label(canvas, text="Computer's choice: ", **label_style)
+
+# Create buttons for player choices with styling and padding
+button_style = {'font': game_font, 'padx': 20, 'pady': 10, 'bg': '#FF6347', 'fg': '#FFFFFF'}
+rock_btn = Button(canvas, text="Rock", **button_style, command=lambda: play_game('Rock'))
+paper_btn = Button(canvas, text="Paper", **button_style, command=lambda: play_game('Paper'))
+scissors_btn = Button(canvas, text="Scissors", **button_style, command=lambda: play_game('Scissors'))
+
+# Create a frame for displaying the pie chart
+result_graph_frame = Frame(canvas, bg="#F8F8FF")
+
+# Pack the widgets with padding
+player_score_label.pack(pady=10)
+computer_score_label.pack(pady=10)
+rock_btn.pack(pady=20)
+paper_btn.pack(pady=20)
+scissors_btn.pack(pady=20)
+result_label.pack(pady=20)
+player_choice_label.pack()
+computer_choice_label.pack()
+result_graph_frame.pack(pady=20)
+
+# Start the main loop
+root.mainloop()
